@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pokédex de cartes</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: white;
+}
+
+h1 {
+  text-align: center;
+  padding: 10px;
+  font-size: 20px;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  align-items: center;
+}
+
+.controls input[type="text"] {
+  flex: 1;
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+}
+
+.controls label {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.counter {
+  font-size: 12px;
+  margin-left: auto;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  padding: 10px;
+}
+
+.card {
+  background: #222;
+  border-radius: 8px;
+  padding: 6px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.card img {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.card img.missing {
+  opacity: 0.2;
+}
+
+.name {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* Favoris */
+.star {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  user-select: none;
+  opacity: 0.6;
+}
+
+.star.fav {
+  opacity: 1;
+}
+
+/* Viewer */
+.viewer {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.viewer img {
+  max-width: 95%;
+  max-height: 95%;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Mon Pokédex de cartes</h1>
+
+<div class="controls">
+  <input type="text" id="search" placeholder="Rechercher un Pokémon...">
+
+  <label>
+    <input type="checkbox" id="onlyMissing">
+    Sans carte
+  </label>
+
+  <label>
+    <input type="checkbox" id="onlyFav">
+    Favoris
+  </label>
+
+  <div class="counter" id="counter">0 / 0</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="viewer" id="viewer" onclick="closeViewer()">
+  <img id="viewerImg">
+</div>
+
+<script src="data.js"></script>
+
+<script>
+const grid = document.getElementById("grid");
+const searchInput = document.getElementById("search");
+const onlyMissingCheckbox = document.getElementById("onlyMissing");
+const onlyFavCheckbox = document.getElementById("onlyFav");
+const counter = document.getElementById("counter");
+
+let cards = [];
+let ownedCount = 0;
+
+// Favoris sauvegardés
+const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+
+pokedex.forEach(p => {
+  const idStr = String(p.id).padStart(4, "0");
+  const imgPath = `cards/${idStr}.png`;
+
+  const card = document.createElement("div");
+  card.className = "card";
+  card.dataset.name = p.name.toLowerCase();
+  card.dataset.id = p.id;
+  card.dataset.missing = "true";
+
+  const img = document.createElement("img");
+  img.src = imgPath;
+
+  img.onload = () => {
+    card.dataset.missing = "false";
+    ownedCount++;
+    updateCounter();
+  };
+
+  img.onerror = () => img.classList.add("missing");
+
+  card.appendChild(img);
+
+  // ⭐ Favoris
+  const star = document.createElement("div");
+  star.className = "star";
+  star.textContent = favorites.includes(p.id) ? "⭐" : "☆";
+
+  if (favorites.includes(p.id)) {
+    star.classList.add("fav");
+    card.dataset.fav = "true";
+  } else {
+    card.dataset.fav = "false";
+  }
+
+  star.onclick = (e) => {
+    e.stopPropagation();
+    toggleFavorite(p.id, star, card);
+  };
+
+  card.appendChild(star);
+
+  const name = document.createElement("div");
+  name.className = "name";
+  name.textContent = p.name;
+  card.appendChild(name);
+
+  card.onclick = () => openViewer(imgPath);
+
+  grid.appendChild(card);
+  cards.push(card);
+});
+
+function toggleFavorite(id, star, card) {
+  const index = favorites.indexOf(id);
+
+  if (index === -1) {
+    favorites.push(id);
+    star.textContent = "⭐";
+    star.classList.add("fav");
+    card.dataset.fav = "true";
+  } else {
+    favorites.splice(index, 1);
+    star.textContent = "☆";
+    star.classList.remove("fav");
+    card.dataset.fav = "false";
+  }
+
+  localStorage.setItem("favorites", JSON.stringify(favorites));
+  applyFilters();
+}
+
+function updateCounter() {
+  counter.textContent = `${ownedCount} / ${pokedex.length} cartes`;
+}
+
+// 🔍 FILTRES
+function applyFilters() {
+  const search = searchInput.value.toLowerCase();
+  const onlyMissing = onlyMissingCheckbox.checked;
+  const onlyFav = onlyFavCheckbox.checked;
+
+  cards.forEach(card => {
+    const matchSearch =
+      card.dataset.name.includes(search) ||
+      card.dataset.id.startsWith(search);
+
+    const matchMissing =
+      !onlyMissing || card.dataset.missing === "true";
+
+    const matchFav =
+      !onlyFav || card.dataset.fav === "true";
+
+    card.style.display =
+      matchSearch && matchMissing && matchFav ? "" : "none";
+  });
+}
+
+searchInput.addEventListener("input", applyFilters);
+onlyMissingCheckbox.addEventListener("change", applyFilters);
+onlyFavCheckbox.addEventListener("change", applyFilters);
+
+// Viewer
+function openViewer(src) {
+  document.getElementById("viewerImg").src = src;
+  document.getElementById("viewer").style.display = "flex";
+}
+
+function closeViewer() {
+  document.getElementById("viewer").style.display = "none";
+}
+
+updateCounter();
+</script>
+
+</body>
+</html>
