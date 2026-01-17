@@ -2,66 +2,130 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pokédex de cartes</title>
 
 <style>
+* { box-sizing: border-box; font-family: Arial, sans-serif; }
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #111;
+  background: #0b0b0b;
   color: white;
 }
 
-h1 {
-  text-align: center;
-  padding: 10px;
-  font-size: 20px;
+/* OUVERTURE */
+#pokedex {
+  max-width: 1400px;
+  margin: 20px auto;
+  background: #c62828;
+  border-radius: 18px;
+  padding: 18px;
+  animation: openDex 0.8s ease-out;
 }
 
-/* Controls */
-.controls {
+@keyframes openDex {
+  from { transform: translateX(-60px) scaleX(0.9); opacity: 0; }
+  to { transform: translateX(0) scaleX(1); opacity: 1; }
+}
+
+/* HEADER */
+header {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 10px;
   align-items: center;
+  gap: 12px;
 }
 
-.controls input[type="text"] {
+header h1 {
   flex: 1;
-  padding: 6px;
+  margin: 0;
+  font-size: 26px;
+}
+
+.led { border-radius: 50%; }
+.led.big {
+  width: 42px;
+  height: 42px;
+  background: radial-gradient(circle, #00e5ff, #01579b);
+  border: 3px solid white;
+}
+.led.small { width: 12px; height: 12px; }
+.red { background: #f44336; }
+.yellow { background: #ffeb3b; }
+.green { background: #4caf50; }
+
+#counter {
+  background: #111;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #00e676;
+}
+
+/* LAYOUT */
+#content {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+
+/* CONTROLS */
+#controls {
+  background: #b71c1c;
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#search, select {
+  padding: 8px;
   border-radius: 6px;
   border: none;
+  font-size: 14px;
 }
 
-.controls label {
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.toggle { font-size: 14px; }
+
+/* GEN STATS */
+.gen-stats {
+  background: #111;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
-.counter {
-  font-size: 12px;
-  margin-left: auto;
+/* SCREEN */
+#screen {
+  background: #263238;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: inset 0 0 14px black;
 }
 
-/* Grid */
-.grid {
+/* GRID */
+#grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 10px;
-  padding: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 14px;
 }
 
 .card {
-  background: #222;
+  background: #37474f;
   border-radius: 8px;
   padding: 6px;
   text-align: center;
-  cursor: pointer;
   position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card.has-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+  cursor: pointer;
 }
 
 .card img {
@@ -69,71 +133,125 @@ h1 {
   border-radius: 6px;
 }
 
-.card img.missing {
-  opacity: 0.2;
+.card.missing {
+  opacity: 0.3;
 }
 
 .name {
-  font-size: 12px;
+  font-size: 13px;
   margin-top: 4px;
 }
 
-/* Favoris */
+/* FAVORI */
 .star {
   position: absolute;
-  top: 4px;
+  top: 6px;
   right: 6px;
   font-size: 16px;
   cursor: pointer;
-  user-select: none;
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
-.star.fav {
+.star.active {
   opacity: 1;
+  color: gold;
 }
 
-/* Viewer */
-.viewer {
+/* LIST VIEW */
+#list {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list-item {
+  background: #37474f;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.list-item.missing {
+  opacity: 0.3;
+}
+
+/* VIEWER */
+#viewer {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.95);
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 10;
+  z-index: 20;
 }
 
-.viewer img {
-  max-width: 95%;
-  max-height: 95%;
+#viewer img {
+  max-width: 90%;
+  max-height: 90%;
+  animation: zoomIn 0.25s ease;
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.9); }
+  to { transform: scale(1); }
+}
+
+@media (max-width: 900px) {
+  #content { grid-template-columns: 1fr; }
 }
 </style>
 </head>
 
 <body>
 
-<h1>Mon Pokédex de cartes</h1>
+<div id="pokedex">
 
-<div class="controls">
-  <input type="text" id="search" placeholder="Rechercher un Pokémon...">
+<header>
+  <div class="led big"></div>
+  <div class="led small red"></div>
+  <div class="led small yellow"></div>
+  <div class="led small green"></div>
+  <h1>Pokédex de cartes</h1>
+  <div id="counter">0 / 0</div>
+</header>
 
-  <label>
-    <input type="checkbox" id="onlyMissing">
-    Sans carte
-  </label>
+<div id="content">
 
-  <label>
-    <input type="checkbox" id="onlyFav">
-    Favoris
-  </label>
+<aside id="controls">
+  <input type="text" id="search" placeholder="Nom ou numéro">
 
-  <div class="counter" id="counter">0 / 0</div>
+  <select id="genFilter">
+    <option value="all">Toutes générations</option>
+    <option value="1">Génération 1</option>
+    <option value="2">Génération 2</option>
+    <option value="3">Génération 3</option>
+    <option value="4">Génération 4</option>
+    <option value="5">Génération 5</option>
+    <option value="6">Génération 6</option>
+    <option value="7">Génération 7</option>
+    <option value="8">Génération 8</option>
+    <option value="9">Génération 9</option>
+  </select>
+
+  <label class="toggle"><input type="checkbox" id="onlyMissing"> Sans carte</label>
+  <label class="toggle"><input type="checkbox" id="onlyFav"> Favoris ⭐</label>
+  <label class="toggle"><input type="checkbox" id="listView"> Vue liste</label>
+
+  <div class="gen-stats" id="genStats"></div>
+</aside>
+
+<main id="screen">
+  <div id="grid"></div>
+  <div id="list"></div>
+</main>
+
+</div>
 </div>
 
-<div class="grid" id="grid"></div>
-
-<div class="viewer" id="viewer" onclick="closeViewer()">
+<div id="viewer" onclick="this.style.display='none'">
   <img id="viewerImg">
 </div>
 
@@ -141,131 +259,136 @@ h1 {
 
 <script>
 const grid = document.getElementById("grid");
-const searchInput = document.getElementById("search");
-const onlyMissingCheckbox = document.getElementById("onlyMissing");
-const onlyFavCheckbox = document.getElementById("onlyFav");
+const list = document.getElementById("list");
+const search = document.getElementById("search");
+const onlyMissing = document.getElementById("onlyMissing");
+const onlyFav = document.getElementById("onlyFav");
+const listView = document.getElementById("listView");
+const genFilter = document.getElementById("genFilter");
 const counter = document.getElementById("counter");
+const genStats = document.getElementById("genStats");
 
-let cards = [];
-let ownedCount = 0;
-
-// Favoris sauvegardés
 const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+
+let owned = 0;
+let cards = [];
+let genOwned = Array(10).fill(0);
+const genTotal = [0,151,100,135,107,156,72,88,96,120];
+
+function getGen(id) {
+  return id <= 151 ? 1 : id <= 251 ? 2 : id <= 386 ? 3 :
+         id <= 493 ? 4 : id <= 649 ? 5 : id <= 721 ? 6 :
+         id <= 809 ? 7 : id <= 905 ? 8 : 9;
+}
 
 pokedex.forEach(p => {
   const idStr = String(p.id).padStart(4, "0");
   const imgPath = `cards/${idStr}.png`;
+  const gen = getGen(p.id);
 
   const card = document.createElement("div");
   card.className = "card";
-  card.dataset.name = p.name.toLowerCase();
+  card.dataset.name = p.name;
   card.dataset.id = p.id;
+  card.dataset.gen = gen;
   card.dataset.missing = "true";
+  card.dataset.fav = favorites.includes(p.id);
 
   const img = document.createElement("img");
   img.src = imgPath;
 
   img.onload = () => {
     card.dataset.missing = "false";
-    ownedCount++;
-    updateCounter();
+    card.classList.add("has-card");
+    owned++;
+    genOwned[gen]++;
+    updateCounters();
   };
 
-  img.onerror = () => img.classList.add("missing");
-
-  card.appendChild(img);
-
-  // ⭐ Favoris
-  const star = document.createElement("div");
-  star.className = "star";
-  star.textContent = favorites.includes(p.id) ? "⭐" : "☆";
-
-  if (favorites.includes(p.id)) {
-    star.classList.add("fav");
-    card.dataset.fav = "true";
-  } else {
-    card.dataset.fav = "false";
-  }
-
-  star.onclick = (e) => {
-    e.stopPropagation();
-    toggleFavorite(p.id, star, card);
-  };
-
-  card.appendChild(star);
+  img.onerror = () => card.classList.add("missing");
 
   const name = document.createElement("div");
   name.className = "name";
-  name.textContent = p.name;
-  card.appendChild(name);
+  name.textContent = `#${idStr} ${p.name}`;
 
-  card.onclick = () => openViewer(imgPath);
+  const star = document.createElement("div");
+  star.className = "star";
+  star.textContent = favorites.includes(p.id) ? "⭐" : "☆";
+  if (favorites.includes(p.id)) star.classList.add("active");
 
+  star.onclick = e => {
+    e.stopPropagation();
+    toggleFav(p.id, star, card);
+  };
+
+  card.onclick = () => {
+    if (card.dataset.missing === "false") {
+      document.getElementById("viewerImg").src = imgPath;
+      document.getElementById("viewer").style.display = "flex";
+    }
+  };
+
+  card.append(img, star, name);
   grid.appendChild(card);
   cards.push(card);
 });
 
-function toggleFavorite(id, star, card) {
-  const index = favorites.indexOf(id);
-
-  if (index === -1) {
+function toggleFav(id, star, card) {
+  const i = favorites.indexOf(id);
+  if (i === -1) {
     favorites.push(id);
     star.textContent = "⭐";
-    star.classList.add("fav");
+    star.classList.add("active");
     card.dataset.fav = "true";
   } else {
-    favorites.splice(index, 1);
+    favorites.splice(i, 1);
     star.textContent = "☆";
-    star.classList.remove("fav");
+    star.classList.remove("active");
     card.dataset.fav = "false";
   }
-
   localStorage.setItem("favorites", JSON.stringify(favorites));
   applyFilters();
 }
 
-function updateCounter() {
-  counter.textContent = `${ownedCount} / ${pokedex.length} cartes`;
+function updateCounters() {
+  counter.textContent = `${owned} / ${pokedex.length}`;
+  genStats.innerHTML = genOwned.slice(1).map(
+    (v,i)=>`G${i+1} : ${v} / ${genTotal[i+1]}`
+  ).join("<br>");
 }
 
-// 🔍 FILTRES
 function applyFilters() {
-  const search = searchInput.value.toLowerCase();
-  const onlyMissing = onlyMissingCheckbox.checked;
-  const onlyFav = onlyFavCheckbox.checked;
+  const s = search.value.toLowerCase();
+  const gen = genFilter.value;
 
-  cards.forEach(card => {
-    const matchSearch =
-      card.dataset.name.includes(search) ||
-      card.dataset.id.startsWith(search);
+  grid.style.display = listView.checked ? "none" : "grid";
+  list.style.display = listView.checked ? "flex" : "none";
+  list.innerHTML = "";
 
-    const matchMissing =
-      !onlyMissing || card.dataset.missing === "true";
+  cards.forEach(c => {
+    const ok =
+      (c.dataset.name.toLowerCase().includes(s) || c.dataset.id.startsWith(s)) &&
+      (!onlyMissing.checked || c.dataset.missing === "true") &&
+      (!onlyFav.checked || c.dataset.fav === "true") &&
+      (gen === "all" || c.dataset.gen === gen);
 
-    const matchFav =
-      !onlyFav || card.dataset.fav === "true";
+    c.style.display = ok && !listView.checked ? "" : "none";
 
-    card.style.display =
-      matchSearch && matchMissing && matchFav ? "" : "none";
+    if (ok && listView.checked) {
+      const li = document.createElement("div");
+      li.className = "list-item" + (c.dataset.missing === "true" ? " missing" : "");
+      li.textContent = `#${String(c.dataset.id).padStart(4,"0")} ${c.dataset.name}`;
+      list.appendChild(li);
+    }
   });
 }
 
-searchInput.addEventListener("input", applyFilters);
-onlyMissingCheckbox.addEventListener("change", applyFilters);
-onlyFavCheckbox.addEventListener("change", applyFilters);
+[search, onlyMissing, onlyFav, listView, genFilter]
+  .forEach(el => el.addEventListener("change", applyFilters));
 
-// Viewer
-function openViewer(src) {
-  document.getElementById("viewerImg").src = src;
-  document.getElementById("viewer").style.display = "flex";
-}
-
-function closeViewer() {
-  document.getElementById("viewer").style.display = "none";
-}
-
-updateCounter();
+updateCounters();
 </script>
 
 </body>
 </html>
+
