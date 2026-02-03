@@ -21,7 +21,7 @@ body {
   background: #c62828;
   border-radius: 18px;
   padding: 18px;
-  animation: openDex 0.8s ease-out;
+  animation: openDex 1.0s ease-out;
 }
 
 @keyframes openDex {
@@ -54,7 +54,7 @@ header h1 {
 .yellow { background: #ffeb3b; }
 .green { background: #4caf50; }
 
-#counter {
+#counter, #rareCounter {
   background: #111;
   padding: 6px 12px;
   border-radius: 6px;
@@ -154,6 +154,21 @@ header h1 {
   color: gold;
 }
 
+/* ===== RARE ===== */
+.diamond {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.diamond.active {
+  opacity: 1;
+  color: #4fc3ff;
+}
+
 /* ===== LIST VIEW ===== */
 #list {
   display: none;
@@ -226,6 +241,24 @@ header h1 {
   .prev { left: 10px; }
   .next { right: 10px; }
 }
+
+/* ===== PROGRESS BARS ===== */
+.progress {
+  width: 100%;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 4px 0 8px;
+}
+
+.progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #00e676, #00c853);
+  width: 0%;
+  transition: width 0.4s ease;
+}
 </style>
 </head>
 
@@ -239,7 +272,9 @@ header h1 {
   <div class="led small yellow"></div>
   <div class="led small green"></div>
   <h1>Pokédex de cartes</h1>
+
   <div id="counter">0 / 0</div>
+  <div id="rareCounter">0 / 1025 rares</div>
 </header>
 
 <div id="content">
@@ -262,6 +297,7 @@ header h1 {
 
   <label class="toggle"><input type="checkbox" id="onlyMissing"> Sans carte</label>
   <label class="toggle"><input type="checkbox" id="onlyFav"> Favoris ⭐</label>
+  <label class="toggle"><input type="checkbox" id="onlyRare"> Cartes rares 💎</label>
   <label class="toggle"><input type="checkbox" id="listView"> Vue liste</label>
 
   <div class="gen-stats" id="genStats"></div>
@@ -295,9 +331,11 @@ const list = document.getElementById("list");
 const search = document.getElementById("search");
 const onlyMissing = document.getElementById("onlyMissing");
 const onlyFav = document.getElementById("onlyFav");
+const onlyRare = document.getElementById("onlyRare");
 const listView = document.getElementById("listView");
 const genFilter = document.getElementById("genFilter");
 const counter = document.getElementById("counter");
+const rareCounter = document.getElementById("rareCounter");
 const genStats = document.getElementById("genStats");
 
 const viewer = document.getElementById("viewer");
@@ -305,6 +343,7 @@ const viewerImg = document.getElementById("viewerImg");
 const viewerInfo = document.getElementById("viewerInfo");
 
 const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+const rares = JSON.parse(localStorage.getItem("rares") || "[]");
 
 let owned = 0;
 let cards = [];
@@ -330,6 +369,7 @@ pokedex.forEach(p => {
   card.dataset.gen = gen;
   card.dataset.missing = "true";
   card.dataset.fav = favorites.includes(p.id);
+  card.dataset.rare = rares.includes(p.id);
 
   const img = document.createElement("img");
   img.src = imgPath;
@@ -358,6 +398,16 @@ pokedex.forEach(p => {
     toggleFav(p.id, star, card);
   };
 
+  const diamond = document.createElement("div");
+  diamond.className = "diamond";
+  diamond.textContent = rares.includes(p.id) ? "💎" : "◇";
+  if (rares.includes(p.id)) diamond.classList.add("active");
+
+  diamond.onclick = e => {
+    e.stopPropagation();
+    toggleRare(p.id, diamond, card);
+  };
+
   card.onclick = () => {
     if (card.dataset.missing === "false") {
       currentIndex = cards.indexOf(card);
@@ -365,7 +415,7 @@ pokedex.forEach(p => {
     }
   };
 
-  card.append(img, star, name);
+  card.append(img, star, diamond, name);
   grid.appendChild(card);
   cards.push(card);
 });
@@ -386,6 +436,29 @@ function toggleFav(id, star, card) {
   }
   localStorage.setItem("favorites", JSON.stringify(favorites));
   applyFilters();
+}
+
+/* ===== RARES ===== */
+function toggleRare(id, diamond, card) {
+  const i = rares.indexOf(id);
+  if (i === -1) {
+    rares.push(id);
+    diamond.textContent = "💎";
+    diamond.classList.add("active");
+    card.dataset.rare = "true";
+  } else {
+    rares.splice(i, 1);
+    diamond.textContent = "◇";
+    diamond.classList.remove("active");
+    card.dataset.rare = "false";
+  }
+  localStorage.setItem("rares", JSON.stringify(rares));
+  updateRareCounter();
+  applyFilters();
+}
+
+function updateRareCounter() {
+  rareCounter.textContent = `${rares.length} / 1025 cartes rares`;
 }
 
 /* ===== VIEWER ===== */
@@ -435,12 +508,33 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") viewer.style.display = "none";
 });
 
-/* ===== FILTERS ===== */
+/* ===== FILTERS & COUNTERS ===== */
 function updateCounters() {
   counter.textContent = `${owned} / ${pokedex.length}`;
-  genStats.innerHTML = genOwned.slice(1).map(
-    (v,i)=>`G${i+1} : ${v} / ${genTotal[i+1]}`
-  ).join("<br>");
+
+  const globalPercent = Math.round((owned / pokedex.length) * 100);
+
+  let html = `
+    <strong>Global</strong>
+    <div class="progress">
+      <span style="width:${globalPercent}%"></span>
+    </div>
+    ${owned} / ${pokedex.length}
+    <hr style="border:0;border-top:1px solid #333;margin:8px 0">
+  `;
+
+  for (let g = 1; g <= 9; g++) {
+    const percent = Math.round((genOwned[g] / genTotal[g]) * 100);
+    html += `
+      <strong>G${g}</strong> : ${genOwned[g]} / ${genTotal[g]}
+      <div class="progress">
+        <span style="width:${percent}%"></span>
+      </div>
+    `;
+  }
+
+  genStats.innerHTML = html;
+  updateRareCounter();
 }
 
 function applyFilters() {
@@ -456,6 +550,7 @@ function applyFilters() {
       (c.dataset.name.toLowerCase().includes(s) || c.dataset.id.startsWith(s)) &&
       (!onlyMissing.checked || c.dataset.missing === "true") &&
       (!onlyFav.checked || c.dataset.fav === "true") &&
+      (!onlyRare.checked || c.dataset.rare === "true") &&
       (gen === "all" || c.dataset.gen === gen);
 
     c.style.display = ok && !listView.checked ? "" : "none";
@@ -469,7 +564,7 @@ function applyFilters() {
   });
 }
 
-[search, onlyMissing, onlyFav, listView, genFilter]
+[search, onlyMissing, onlyFav, onlyRare, listView, genFilter]
   .forEach(el => el.addEventListener("change", applyFilters));
 
 updateCounters();
@@ -477,4 +572,3 @@ updateCounters();
 
 </body>
 </html>
-
