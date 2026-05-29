@@ -4,266 +4,570 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pokédex de cartes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-* { box-sizing: border-box; font-family: Arial, sans-serif; }
+:root {
+  --red: #d32f2f;
+  --red-dark: #b71c1c;
+  --red-light: #ef5350;
+  --screen-bg: #1a2a1a;
+  --screen-inner: #1e3020;
+  --pixel-font: 'Press Start 2P', monospace;
+  --body-font: 'Nunito', sans-serif;
+  --gold: #ffd54f;
+  --diamond: #4dd0e1;
+  --green-led: #69f0ae;
+  --missing-op: 0.22;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  margin: 0;
-  background: #0b0b0b;
-  color: white;
+  background: #111;
+  color: #e0e0e0;
+  font-family: var(--body-font);
+  min-height: 100vh;
+  background-image: radial-gradient(ellipse at 20% 50%, #1a0000 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 50%, #001a0a 0%, transparent 60%);
 }
 
-/* ===== OUVERTURE ===== */
+/* ===== POKEDEX SHELL ===== */
 #pokedex {
-  max-width: 1400px;
-  margin: 20px auto;
-  background: #c62828;
-  border-radius: 18px;
-  padding: 18px;
-  animation: openDex 1.0s ease-out;
+  max-width: 1440px;
+  margin: 16px auto;
+  background: linear-gradient(160deg, #c62828 0%, #b71c1c 40%, #8b0000 100%);
+  border-radius: 24px 24px 20px 20px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1);
+  animation: slidein 0.5s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
 }
 
-@keyframes openDex {
-  from { transform: translateX(-60px) scaleX(0.9); opacity: 0; }
-  to { transform: translateX(0) scaleX(1); opacity: 1; }
+@keyframes slidein {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
 }
+
+/* Texture screws */
+#pokedex::before, #pokedex::after {
+  content: '';
+  position: absolute;
+  width: 10px; height: 10px;
+  background: radial-gradient(circle, #9a1818, #5a0000);
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.5);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.15);
+  top: 14px;
+}
+#pokedex::before { left: 14px; }
+#pokedex::after  { right: 14px; }
 
 /* ===== HEADER ===== */
 header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
-header h1 {
+.led-big {
+  width: 44px; height: 44px;
+  background: radial-gradient(circle at 35% 35%, #80deea, #0097a7);
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.3);
+  box-shadow: 0 0 12px rgba(0,188,212,0.6), inset 0 -2px 4px rgba(0,0,0,0.3);
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.led-big:hover { box-shadow: 0 0 20px rgba(0,188,212,0.9); }
+.led-big::after {
+  content: '';
+  position: absolute;
+  top: 8px; left: 8px;
+  width: 10px; height: 6px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  transform: rotate(-30deg);
+}
+
+.led-row { display: flex; gap: 5px; align-items: center; }
+.led { width: 11px; height: 11px; border-radius: 50%; box-shadow: 0 0 4px currentColor; }
+.led.r { background: #f44336; color: #f44336; }
+.led.y { background: #ffeb3b; color: #ffeb3b; }
+.led.g { background: #4caf50; color: #4caf50; }
+
+h1 {
+  font-family: var(--pixel-font);
+  font-size: 13px;
+  color: #fff;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
   flex: 1;
-  margin: 0;
-  font-size: 26px;
+  letter-spacing: -0.5px;
 }
 
-.led { border-radius: 50%; }
-.led.big {
-  width: 42px;
-  height: 42px;
-  background: radial-gradient(circle, #00e5ff, #01579b);
-  border: 3px solid white;
+.header-stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-.led.small { width: 12px; height: 12px; }
-.red { background: #f44336; }
-.yellow { background: #ffeb3b; }
-.green { background: #4caf50; }
 
-#counter, #rareCounter {
-  background: #111;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #00e676;
+.stat-pill {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--green-led);
+  white-space: nowrap;
 }
+.stat-pill.rare { color: var(--diamond); }
 
 /* ===== LAYOUT ===== */
 #content {
   display: grid;
-  grid-template-columns: 320px 1fr;
-  gap: 18px;
-  margin-top: 18px;
+  grid-template-columns: 300px 1fr;
+  gap: 16px;
 }
 
-/* ===== CONTROLS ===== */
+/* ===== CONTROLS PANEL ===== */
 #controls {
-  background: #b71c1c;
-  border-radius: 14px;
+  background: rgba(0,0,0,0.35);
+  border-radius: 16px;
   padding: 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(4px);
 }
 
-#search, select {
-  padding: 8px;
-  border-radius: 6px;
-  border: none;
+.ctrl-label {
+  font-size: 10px;
+  font-family: var(--pixel-font);
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+#search {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  font-family: var(--body-font);
   font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#search:focus {
+  border-color: var(--diamond);
+  box-shadow: 0 0 0 2px rgba(77,208,225,0.2);
+}
+#search::placeholder { color: rgba(255,255,255,0.35); font-weight: 400; }
+
+.gen-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
 }
 
-.toggle { font-size: 14px; }
+.gen-btn {
+  padding: 5px 2px;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.6);
+  font-family: var(--body-font);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.gen-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+.gen-btn.active { background: rgba(211,47,47,0.5); border-color: var(--red-light); color: white; }
+.gen-btn.all-btn {
+  grid-column: span 5;
+  font-size: 10px;
+  padding: 6px;
+}
+
+.toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+.toggle:hover { background: rgba(255,255,255,0.07); }
+.toggle input { display: none; }
+.toggle-dot {
+  width: 30px; height: 16px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.toggle-dot::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 12px; height: 12px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.toggle input:checked + .toggle-dot { background: var(--red-light); }
+.toggle input:checked + .toggle-dot::after { transform: translateX(14px); }
+
+/* Sort controls */
+.sort-row {
+  display: flex;
+  gap: 5px;
+}
+.sort-btn {
+  flex: 1;
+  padding: 6px 4px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.6);
+  font-family: var(--body-font);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.sort-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+.sort-btn.active { background: rgba(211,47,47,0.5); border-color: var(--red-light); color: white; }
+
+/* Export/Import */
+.action-row {
+  display: flex;
+  gap: 6px;
+}
+.action-btn {
+  flex: 1;
+  padding: 7px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.8);
+  font-family: var(--body-font);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+.action-btn:hover { background: rgba(255,255,255,0.12); color: white; }
+.action-btn.import-btn { color: var(--diamond); border-color: rgba(77,208,225,0.3); }
+.action-btn.export-btn { color: var(--gold); border-color: rgba(255,213,79,0.3); }
+.action-btn.reset-btn  { color: #ef9a9a; border-color: rgba(239,154,154,0.3); font-size: 11px; }
 
 /* ===== GEN STATS ===== */
 .gen-stats {
-  background: #111;
-  border-radius: 8px;
-  padding: 8px;
-  font-size: 13px;
-  line-height: 1.4;
+  background: rgba(0,0,0,0.4);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 280px;
+}
+.gen-stats::-webkit-scrollbar { width: 4px; }
+.gen-stats::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+.gen-row { margin-bottom: 10px; }
+.gen-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 11px; margin-bottom: 3px; color: rgba(255,255,255,0.7); }
+.progress {
+  width: 100%;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--green-led), #00c853);
+  width: 0%;
+  transition: width 0.5s ease;
+  border-radius: 3px;
 }
 
 /* ===== SCREEN ===== */
 #screen {
-  background: #263238;
-  border-radius: 14px;
+  background: var(--screen-bg);
+  border-radius: 16px;
   padding: 14px;
-  box-shadow: inset 0 0 14px black;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.4);
+  border: 2px solid rgba(0,0,0,0.5);
+  position: relative;
+  overflow: hidden;
+}
+#screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,100,0.015) 2px, rgba(0,255,100,0.015) 4px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* ===== GRID ===== */
 #grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  position: relative;
+  z-index: 1;
 }
 
 .card {
-  background: #37474f;
-  border-radius: 8px;
+  background: #2a3a2a;
+  border-radius: 10px;
   padding: 6px;
   text-align: center;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  border: 1px solid rgba(255,255,255,0.05);
+  overflow: hidden;
+}
+
+.card.has-card {
+  background: #2e4030;
+  border-color: rgba(105,240,174,0.12);
 }
 
 .card.has-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+  transform: scale(1.06) translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.7), 0 0 0 1px rgba(105,240,174,0.3);
   cursor: pointer;
+  z-index: 2;
 }
 
 .card img {
   width: 100%;
   border-radius: 6px;
+  display: block;
 }
 
-.card.missing { opacity: 0.3; }
+.card.missing { opacity: var(--missing-op); }
 
 .name {
-  font-size: 13px;
-  margin-top: 4px;
+  font-size: 10px;
+  margin-top: 5px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 700;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+.card.has-card .name { color: rgba(255,255,255,0.9); }
 
-/* ===== FAVORI ===== */
-.star {
+/* ===== STAR / DIAMOND ===== */
+.star, .diamond {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  font-size: 16px;
+  top: 4px;
+  font-size: 14px;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.4;
+  transition: opacity 0.15s, transform 0.15s;
+  line-height: 1;
+  z-index: 3;
 }
-.star.active {
-  opacity: 1;
-  color: gold;
-}
-
-/* ===== RARE ===== */
-.diamond {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-  font-size: 16px;
-  cursor: pointer;
-  opacity: 0.7;
-}
-
-.diamond.active {
-  opacity: 1;
-  color: #4fc3ff;
-}
+.star { right: 4px; }
+.diamond { left: 4px; }
+.star:hover, .diamond:hover { opacity: 0.8; transform: scale(1.2); }
+.star.active { opacity: 1; filter: drop-shadow(0 0 4px gold); }
+.diamond.active { opacity: 1; filter: drop-shadow(0 0 4px var(--diamond)); }
 
 /* ===== LIST VIEW ===== */
 #list {
   display: none;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
 }
 
 .list-item {
-  background: #37474f;
-  padding: 8px;
-  border-radius: 6px;
-  font-size: 14px;
+  background: rgba(46,64,48,0.7);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.15s;
+  cursor: pointer;
 }
-
-.list-item.missing { opacity: 0.3; }
+.list-item:hover { background: rgba(46,64,48,1); }
+.list-item.missing { opacity: var(--missing-op); cursor: default; }
+.list-item .list-icon { font-size: 12px; line-height: 1; }
 
 /* ===== VIEWER ===== */
 #viewer {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.95);
+  background: rgba(0,0,0,0.92);
   display: none;
   justify-content: center;
   align-items: center;
-  z-index: 30;
+  z-index: 50;
+  backdrop-filter: blur(8px);
 }
 
 #viewerContent {
   position: relative;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 }
 
 #viewer img {
-  max-width: 90vw;
-  max-height: 80vh;
-  animation: zoomIn 0.25s ease;
+  max-width: min(420px, 85vw);
+  max-height: 70vh;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+  animation: zoomIn 0.22s cubic-bezier(0.22,1,0.36,1);
 }
 
 @keyframes zoomIn {
-  from { transform: scale(0.9); }
-  to { transform: scale(1); }
+  from { transform: scale(0.88); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+#viewerMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 #viewerInfo {
-  margin-top: 10px;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
 }
 
-/* NAV BUTTONS */
+#viewerGen {
+  font-family: var(--pixel-font);
+  font-size: 9px;
+  color: rgba(255,255,255,0.5);
+}
+
+#viewerBadges {
+  display: flex;
+  gap: 8px;
+}
+
+.viewer-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  opacity: 0.4;
+}
+.viewer-badge:hover { opacity: 0.7; }
+.viewer-badge.active { opacity: 1; }
+.viewer-badge.fav-badge { border-color: gold; color: gold; }
+.viewer-badge.fav-badge.active { background: rgba(255,213,79,0.15); }
+.viewer-badge.rare-badge { border-color: var(--diamond); color: var(--diamond); }
+.viewer-badge.rare-badge.active { background: rgba(77,208,225,0.15); }
+
 .nav {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 48px;
+  font-size: 44px;
   background: none;
   border: none;
   color: white;
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.5;
+  transition: opacity 0.15s;
   z-index: 5;
+  line-height: 1;
 }
 .nav:hover { opacity: 1; }
-.prev { left: -70px; }
-.next { right: -70px; }
+.prev { left: -68px; }
+.next { right: -68px; }
 
-@media (max-width: 900px) {
+/* ===== TOAST ===== */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(60px);
+  background: rgba(30,30,30,0.95);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  z-index: 100;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ===== EMPTY STATE ===== */
+#emptyState {
+  display: none;
+  text-align: center;
+  padding: 50px 20px;
+  color: rgba(255,255,255,0.3);
+  font-family: var(--pixel-font);
+  font-size: 10px;
+  line-height: 2;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 860px) {
   #content { grid-template-columns: 1fr; }
+  h1 { font-size: 10px; }
   .prev { left: 10px; }
   .next { right: 10px; }
+  #grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
 }
-
-/* ===== PROGRESS BARS ===== */
-.progress {
-  width: 100%;
-  height: 8px;
-  background: #333;
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 4px 0 8px;
-}
-
-.progress span {
-  display: block;
-  height: 100%;
-  background: linear-gradient(90deg, #00e676, #00c853);
-  width: 0%;
-  transition: width 0.4s ease;
-}
-
-#counter {
-  display: none;
-}
-
 </style>
 </head>
 
@@ -271,104 +575,189 @@ header h1 {
 
 <div id="pokedex">
 
-<header>
-  <div class="led big"></div>
-  <div class="led small red"></div>
-  <div class="led small yellow"></div>
-  <div class="led small green"></div>
-  <h1>Pokédex de cartes</h1>
+  <header>
+    <div class="led-big" id="ledBig" title="Clignoter !"></div>
+    <div class="led-row">
+      <div class="led r"></div>
+      <div class="led y"></div>
+      <div class="led g"></div>
+    </div>
+    <h1>Pokédex de cartes</h1>
+    <div class="header-stats">
+      <div class="stat-pill" id="counter">— / —</div>
+      <div class="stat-pill rare" id="rareCounter">0 rares</div>
+      <div class="stat-pill" id="favCounter">0 favoris ⭐</div>
+    </div>
+  </header>
 
-  <div id="counter">0 / 0</div>
-  <div id="rareCounter">0 / 1025 rares</div>
-</header>
+  <div id="content">
 
-<div id="content">
+    <aside id="controls">
 
-<aside id="controls">
-  <input type="text" id="search" placeholder="Nom ou numéro">
+      <div>
+        <div class="ctrl-label">Recherche</div>
+        <input type="text" id="search" placeholder="Nom ou numéro…" autocomplete="off">
+      </div>
 
-  <select id="genFilter">
-    <option value="all">Toutes générations</option>
-    <option value="1">Génération 1</option>
-    <option value="2">Génération 2</option>
-    <option value="3">Génération 3</option>
-    <option value="4">Génération 4</option>
-    <option value="5">Génération 5</option>
-    <option value="6">Génération 6</option>
-    <option value="7">Génération 7</option>
-    <option value="8">Génération 8</option>
-    <option value="9">Génération 9</option>
-  </select>
+      <div>
+        <div class="ctrl-label">Génération</div>
+        <div class="gen-grid" id="genFilter">
+          <button class="gen-btn all-btn active" data-gen="all">Toutes</button>
+          <button class="gen-btn" data-gen="1">G1</button>
+          <button class="gen-btn" data-gen="2">G2</button>
+          <button class="gen-btn" data-gen="3">G3</button>
+          <button class="gen-btn" data-gen="4">G4</button>
+          <button class="gen-btn" data-gen="5">G5</button>
+          <button class="gen-btn" data-gen="6">G6</button>
+          <button class="gen-btn" data-gen="7">G7</button>
+          <button class="gen-btn" data-gen="8">G8</button>
+          <button class="gen-btn" data-gen="9">G9</button>
+        </div>
+      </div>
 
-  <label class="toggle"><input type="checkbox" id="onlyMissing"> Sans carte</label>
-  <label class="toggle"><input type="checkbox" id="onlyFav"> Favoris ⭐</label>
-  <label class="toggle"><input type="checkbox" id="onlyRare"> Cartes rares 💎</label>
-  <label class="toggle"><input type="checkbox" id="listView"> Vue liste</label>
+      <div>
+        <div class="ctrl-label">Tri</div>
+        <div class="sort-row">
+          <button class="sort-btn active" data-sort="id">Numéro</button>
+          <button class="sort-btn" data-sort="name">Nom</button>
+          <button class="sort-btn" data-sort="owned">Possédées</button>
+        </div>
+      </div>
 
-  <div class="gen-stats" id="genStats"></div>
-</aside>
+      <div class="toggle-group">
+        <label class="toggle"><input type="checkbox" id="onlyMissing"><div class="toggle-dot"></div> Sans carte</label>
+        <label class="toggle"><input type="checkbox" id="onlyFav"><div class="toggle-dot"></div> Favoris ⭐</label>
+        <label class="toggle"><input type="checkbox" id="onlyRare"><div class="toggle-dot"></div> Rares 💎</label>
+        <label class="toggle"><input type="checkbox" id="listView"><div class="toggle-dot"></div> Vue liste</label>
+      </div>
 
-<main id="screen">
-  <div id="grid"></div>
-  <div id="list"></div>
-</main>
+      <div>
+        <div class="ctrl-label">Données</div>
+        <div class="action-row">
+          <button class="action-btn export-btn" id="exportBtn">⬇ Export</button>
+          <button class="action-btn import-btn" id="importBtn">⬆ Import</button>
+        </div>
+        <div class="action-row" style="margin-top:5px">
+          <button class="action-btn reset-btn" id="resetFavBtn">Vider favoris</button>
+          <button class="action-btn reset-btn" id="resetRareBtn">Vider rares</button>
+        </div>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+      </div>
 
-</div>
-</div>
+      <div class="gen-stats" id="genStats"></div>
 
-<!-- ===== VIEWER ===== -->
-<div id="viewer">
-  <button class="nav prev">◀</button>
+    </aside>
 
-  <div id="viewerContent">
-    <img id="viewerImg">
-    <div id="viewerInfo"></div>
+    <main id="screen">
+      <div id="grid"></div>
+      <div id="list"></div>
+      <div id="emptyState">Aucune carte trouvée :(</div>
+    </main>
+
   </div>
-
-  <button class="nav next">▶</button>
 </div>
+
+<!-- VIEWER -->
+<div id="viewer">
+  <button class="nav prev" aria-label="Précédent">◀</button>
+  <div id="viewerContent">
+    <img id="viewerImg" alt="">
+    <div id="viewerMeta">
+      <div id="viewerInfo"></div>
+      <div id="viewerGen"></div>
+      <div id="viewerBadges">
+        <button class="viewer-badge fav-badge" id="viewerFavBtn">⭐ Favori</button>
+        <button class="viewer-badge rare-badge" id="viewerRareBtn">💎 Rare</button>
+      </div>
+    </div>
+  </div>
+  <button class="nav next" aria-label="Suivant">▶</button>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
 
 <script src="data.js"></script>
 
 <script>
-const grid = document.getElementById("grid");
-const list = document.getElementById("list");
-const search = document.getElementById("search");
-const onlyMissing = document.getElementById("onlyMissing");
-const onlyFav = document.getElementById("onlyFav");
-const onlyRare = document.getElementById("onlyRare");
-const listView = document.getElementById("listView");
-const genFilter = document.getElementById("genFilter");
-const counter = document.getElementById("counter");
-const rareCounter = document.getElementById("rareCounter");
-const genStats = document.getElementById("genStats");
+/* ===================================================
+   POKÉDEX — version améliorée
+   - localStorage : favoris & rares persistants
+   - Favoris = tes vraies préférences (liste vide par défaut)
+   - Rares : liste initiale conservée comme suggestion
+   - Recherche temps réel
+   - Tri : numéro / nom / possédées en premier
+   - Export / Import JSON
+   - Badges favoris & rares dans le viewer
+   - Vue liste cliquable
+   - Génération affichée dans le viewer
+   - Toasts de feedback
+   - LED bleue interactive
+=================================================== */
 
-const viewer = document.getElementById("viewer");
-const viewerImg = document.getElementById("viewerImg");
-const viewerInfo = document.getElementById("viewerInfo");
+const STORAGE_KEY_FAV  = 'pokedex_favorites';
+const STORAGE_KEY_RARE = 'pokedex_rares';
 
-// Listes partagees dans le code: elles sont utilisees comme base par defaut.
-// Remplacez les ids ci-dessous par vos vraies cartes favorites/rares.
-const DEFAULT_FAVORITES = [202,310,317,661,671];
-const DEFAULT_RARES = [791,792,812,114,17,16,898,151,763,987,858,799,375,670,796,287,866,201,335,1024,377,681,917,131,758,196,136,18,892,865,718,696,227,665,387,390,393,7,4,728,725,722,424,914,992,1001,1002,1003,1010,1021,1,6,9,10,25,24,34,35,40,52,68,93,94,115,121,130,133,143,145,149,150,157,162,166,169,192,199,205,212,213,220,229,230,242,249,250,257,262,269,272,275,292,308,309,310,316,323,334,352,361,369,374,373,376,380,389,395,407,429,445,448,460,469,479,490,494,496,497,530,531,544,549,547,550,561,565,566,568,574,575,576,579,593,595,599,601,618,619,620,626,628,635,636,641,642,643,644,646,647,648,649,658,666,671,693,706,701,715,719,724,727,741,743,750,760,778,787,809,826,849,861,862,863,875,880,877,899,900,905,906,911,919,923,925,931,935,936,939,949,966,972,970,975,976,979,982,983,995,998,1007,1008,1014,1015,1011,1009,1016,1019,184,359,918,1005,51,777,3];
+/* IDs par défaut pour les RARES (cartes coréennes / liste initiale)
+   Si localStorage est vide, on démarre avec cette liste.
+   Les FAVORIS démarrent vides — tu les choisis toi-même. */
+const INITIAL_RARES = [791,792,812,114,17,16,898,151,763,987,858,799,375,670,796,287,866,201,335,1024,377,681,917,758,131,196,136,18,892,865,718,696,227,665,387,390,393,7,4,728,725,722,424,914,992,1001,1002,1003,1010,1021,1,6,9,10,25,24,34,35,40,52,68,93,94,115,121,130,133,143,145,149,150,157,162,166,169,192,199,205,212,213,220,229,230,242,249,250,257,262,269,272,275,292,308,309,310,316,323,334,352,361,369,374,373,376,380,389,395,407,429,445,448,460,469,479,490,494,496,497,530,531,544,549,547,550,561,565,566,568,574,575,576,579,593,595,599,601,618,619,620,626,628,635,636,641,642,643,644,646,647,648,649,658,666,671,693,706,701,715,719,724,727,741,743,750,760,778,787,809,826,849,861,862,863,875,880,877,899,900,905,906,911,919,923,925,931,935,936,939,949,966,972,970,975,976,979,982,983,995,998,1007,1008,1014,1015,1011,1009,1016,1019,184,359,918,1005,51,777,3];
 
-function normalizeIds(values) {
-  if (!Array.isArray(values)) return [];
-  return [...new Set(
-    values
-      .map(v => Number(v))
-      .filter(v => Number.isInteger(v) && v > 0)
-  )];
+/* ===== LOAD / SAVE ===== */
+function loadSet(key, fallback = []) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return new Set(fallback.map(Number));
+    return new Set(JSON.parse(raw).map(Number));
+  } catch { return new Set(fallback.map(Number)); }
 }
 
-const favorites = normalizeIds(DEFAULT_FAVORITES);
-const rares = normalizeIds(DEFAULT_RARES);
+function saveSet(key, set) {
+  try { localStorage.setItem(key, JSON.stringify([...set])); } catch {}
+}
 
+const favorites = loadSet(STORAGE_KEY_FAV, []);
+const rares     = loadSet(STORAGE_KEY_RARE, INITIAL_RARES);
+
+/* ===== DOM REFS ===== */
+const grid        = document.getElementById('grid');
+const listEl      = document.getElementById('list');
+const search      = document.getElementById('search');
+const onlyMissing = document.getElementById('onlyMissing');
+const onlyFav     = document.getElementById('onlyFav');
+const onlyRare    = document.getElementById('onlyRare');
+const listView    = document.getElementById('listView');
+const genFilter   = document.getElementById('genFilter');
+let currentGen = 'all';
+
+genFilter.querySelectorAll('.gen-btn').forEach(btn => {
+  btn.onclick = () => {
+    genFilter.querySelectorAll('.gen-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentGen = btn.dataset.gen;
+    applyFilters();
+  };
+});
+const counter     = document.getElementById('counter');
+const rareCounter = document.getElementById('rareCounter');
+const favCounter  = document.getElementById('favCounter');
+const genStats    = document.getElementById('genStats');
+const emptyState  = document.getElementById('emptyState');
+const viewer      = document.getElementById('viewer');
+const viewerImg   = document.getElementById('viewerImg');
+const viewerInfo  = document.getElementById('viewerInfo');
+const viewerGen   = document.getElementById('viewerGen');
+const viewerFavBtn  = document.getElementById('viewerFavBtn');
+const viewerRareBtn = document.getElementById('viewerRareBtn');
+
+/* ===== STATE ===== */
 let owned = 0;
-let cards = [];
+let cards = [];       // toutes les div.card dans l'ordre DOM
+let currentSort = 'id';
 let currentIndex = -1;
-let genOwned = Array(10).fill(0);
-const genTotal = [0,151,100,135,107,156,72,88,96,120];
+const genOwned = Array(10).fill(0);
+const genTotal = [0, 151, 100, 135, 107, 156, 72, 88, 96, 120];
+const GEN_NAMES = ['', 'Kanto', 'Johto', 'Hoenn', 'Sinnoh', 'Unys', 'Kalos', 'Alola', 'Galar', 'Paldea'];
 
 function getGen(id) {
   return id <= 151 ? 1 : id <= 251 ? 2 : id <= 386 ? 3 :
@@ -376,59 +765,53 @@ function getGen(id) {
          id <= 809 ? 7 : id <= 905 ? 8 : 9;
 }
 
+/* ===== BUILD CARDS ===== */
 pokedex.forEach(p => {
-  const idStr = String(p.id).padStart(4, "0");
-  const imgPath = `cards/${idStr}.png`;
-  const gen = getGen(p.id);
+  const idStr  = String(p.id).padStart(4, '0');
+  const gen    = getGen(p.id);
 
-  const card = document.createElement("div");
-  card.className = "card";
-  card.dataset.name = p.name;
-  card.dataset.id = p.id;
-  card.dataset.gen = gen;
-  card.dataset.missing = "true";
-  card.dataset.fav = favorites.includes(p.id);
-  card.dataset.rare = rares.includes(p.id);
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.dataset.name    = p.name.toLowerCase();
+  card.dataset.nameRaw = p.name;
+  card.dataset.id      = p.id;
+  card.dataset.gen     = gen;
+  card.dataset.missing = 'true';
+  card.dataset.fav     = favorites.has(p.id) ? 'true' : 'false';
+  card.dataset.rare    = rares.has(p.id)     ? 'true' : 'false';
 
-  const img = document.createElement("img");
-  img.src = imgPath;
+  const img = document.createElement('img');
+  img.src   = `cards/${idStr}.png`;
+  img.alt   = p.name;
+
 
   img.onload = () => {
-    card.dataset.missing = "false";
-    card.classList.add("has-card");
+    card.dataset.missing = 'false';
+    card.classList.add('has-card');
     owned++;
     genOwned[gen]++;
     updateCounters();
   };
+  img.onerror = () => card.classList.add('missing');
 
-  img.onerror = () => card.classList.add("missing");
-
-  const name = document.createElement("div");
-  name.className = "name";
+  const name = document.createElement('div');
+  name.className   = 'name';
   name.textContent = `#${idStr} ${p.name}`;
 
-  const star = document.createElement("div");
-  star.className = "star";
-  star.textContent = favorites.includes(p.id) ? "⭐" : "☆";
-  if (favorites.includes(p.id)) star.classList.add("active");
+  const star = document.createElement('div');
+  star.className   = 'star';
+  star.textContent = favorites.has(p.id) ? '⭐' : '☆';
+  if (favorites.has(p.id)) star.classList.add('active');
+  star.onclick = e => { e.stopPropagation(); toggleFav(p.id); };
 
-  star.onclick = e => {
-    e.stopPropagation();
-    toggleFav(p.id, star, card);
-  };
-
-  const diamond = document.createElement("div");
-  diamond.className = "diamond";
-  diamond.textContent = rares.includes(p.id) ? "💎" : "◇";
-  if (rares.includes(p.id)) diamond.classList.add("active");
-
-  diamond.onclick = e => {
-    e.stopPropagation();
-    toggleRare(p.id, diamond, card);
-  };
+  const diamond = document.createElement('div');
+  diamond.className   = 'diamond';
+  diamond.textContent = rares.has(p.id) ? '💎' : '◇';
+  if (rares.has(p.id)) diamond.classList.add('active');
+  diamond.onclick = e => { e.stopPropagation(); toggleRare(p.id); };
 
   card.onclick = () => {
-    if (card.dataset.missing === "false") {
+    if (card.dataset.missing === 'false') {
       currentIndex = cards.indexOf(card);
       openViewer();
     }
@@ -439,64 +822,80 @@ pokedex.forEach(p => {
   cards.push(card);
 });
 
-/* ===== FAVORIS ===== */
-function toggleFav(id, star, card) {
-  const i = favorites.indexOf(id);
-  if (i === -1) {
-    favorites.push(id);
-    star.textContent = "⭐";
-    star.classList.add("active");
-    card.dataset.fav = "true";
+/* ===== TOGGLE FAV ===== */
+function toggleFav(id) {
+  if (favorites.has(id)) {
+    favorites.delete(id);
   } else {
-    favorites.splice(i, 1);
-    star.textContent = "☆";
-    star.classList.remove("active");
-    card.dataset.fav = "false";
+    favorites.add(id);
   }
+  saveSet(STORAGE_KEY_FAV, favorites);
+  refreshCardMarkers(id);
+  updateCounters();
   applyFilters();
+  if (viewer.style.display === 'flex') updateViewerBadges();
 }
 
-/* ===== RARES ===== */
-function toggleRare(id, diamond, card) {
-  const i = rares.indexOf(id);
-  if (i === -1) {
-    rares.push(id);
-    diamond.textContent = "💎";
-    diamond.classList.add("active");
-    card.dataset.rare = "true";
+function toggleRare(id) {
+  if (rares.has(id)) {
+    rares.delete(id);
   } else {
-    rares.splice(i, 1);
-    diamond.textContent = "◇";
-    diamond.classList.remove("active");
-    card.dataset.rare = "false";
+    rares.add(id);
   }
-  updateRareCounter();
+  saveSet(STORAGE_KEY_RARE, rares);
+  refreshCardMarkers(id);
+  updateCounters();
   applyFilters();
+  if (viewer.style.display === 'flex') updateViewerBadges();
 }
 
-function updateRareCounter() {
-  rareCounter.textContent = `${rares.length} / 1025 cartes rares`;
+function refreshCardMarkers(id) {
+  const card = cards.find(c => Number(c.dataset.id) === id);
+  if (!card) return;
+  const isFav  = favorites.has(id);
+  const isRare = rares.has(id);
+  card.dataset.fav  = isFav  ? 'true' : 'false';
+  card.dataset.rare = isRare ? 'true' : 'false';
+  const star    = card.querySelector('.star');
+  const diamond = card.querySelector('.diamond');
+  star.textContent = isFav ? '⭐' : '☆';
+  star.classList.toggle('active', isFav);
+  diamond.textContent = isRare ? '💎' : '◇';
+  diamond.classList.toggle('active', isRare);
 }
 
 /* ===== VIEWER ===== */
 function openViewer() {
   updateViewer();
-  viewer.style.display = "flex";
+  viewer.style.display = 'flex';
 }
 
 function updateViewer() {
-  const card = cards[currentIndex];
-  const idStr = String(card.dataset.id).padStart(4, "0");
-  viewerImg.src = `cards/${idStr}.png`;
-  viewerInfo.textContent = `#${idStr} ${card.dataset.name}`;
+  const card  = cards[currentIndex];
+  const id    = Number(card.dataset.id);
+  const idStr = String(id).padStart(4, '0');
+  viewerImg.src  = `cards/${idStr}.png`;
+  viewerImg.alt  = card.dataset.nameRaw;
+  viewerInfo.textContent = `#${idStr} ${card.dataset.nameRaw}`;
+  viewerGen.textContent  = `Génération ${card.dataset.gen} — ${GEN_NAMES[card.dataset.gen]}`;
+  updateViewerBadges();
 }
+
+function updateViewerBadges() {
+  const id = Number(cards[currentIndex].dataset.id);
+  viewerFavBtn.classList.toggle('active',  favorites.has(id));
+  viewerRareBtn.classList.toggle('active', rares.has(id));
+}
+
+viewerFavBtn.onclick  = e => { e.stopPropagation(); toggleFav(Number(cards[currentIndex].dataset.id)); };
+viewerRareBtn.onclick = e => { e.stopPropagation(); toggleRare(Number(cards[currentIndex].dataset.id)); };
 
 function navigate(dir) {
   let i = currentIndex;
   while (true) {
     i += dir;
     if (i < 0 || i >= cards.length) return;
-    if (cards[i].dataset.missing === "false") {
+    if (cards[i].dataset.missing === 'false') {
       currentIndex = i;
       updateViewer();
       return;
@@ -504,86 +903,234 @@ function navigate(dir) {
   }
 }
 
-document.querySelector(".prev").onclick = e => { e.stopPropagation(); navigate(-1); };
-document.querySelector(".next").onclick = e => { e.stopPropagation(); navigate(1); };
+document.querySelector('.prev').onclick = e => { e.stopPropagation(); navigate(-1); };
+document.querySelector('.next').onclick = e => { e.stopPropagation(); navigate(1); };
+viewer.onclick = e => { if (e.target === viewer) viewer.style.display = 'none'; };
 
-viewer.onclick = () => viewer.style.display = "none";
-
-/* ===== SWIPE MOBILE ===== */
 let startX = 0;
-viewer.addEventListener("touchstart", e => startX = e.touches[0].clientX);
-viewer.addEventListener("touchend", e => {
+viewer.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+viewer.addEventListener('touchend', e => {
   const dx = e.changedTouches[0].clientX - startX;
   if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1);
 });
 
-/* ===== CLAVIER ===== */
-document.addEventListener("keydown", e => {
-  if (viewer.style.display !== "flex") return;
-  if (e.key === "ArrowLeft") navigate(-1);
-  if (e.key === "ArrowRight") navigate(1);
-  if (e.key === "Escape") viewer.style.display = "none";
+document.addEventListener('keydown', e => {
+  if (viewer.style.display !== 'flex') return;
+  if (e.key === 'ArrowLeft')  navigate(-1);
+  if (e.key === 'ArrowRight') navigate(1);
+  if (e.key === 'Escape') viewer.style.display = 'none';
 });
 
-/* ===== FILTERS & COUNTERS ===== */
+/* ===== COUNTERS ===== */
 function updateCounters() {
-  counter.textContent = `${owned} / ${pokedex.length}`;
+  counter.textContent     = `${owned} / ${pokedex.length} cartes`;
+  rareCounter.textContent = `${rares.size} rares 💎`;
+  favCounter.textContent  = `${favorites.size} favoris ⭐`;
 
-  const globalPercent = Math.round((owned / pokedex.length) * 100);
-
+  const globalPct = pokedex.length ? Math.round((owned / pokedex.length) * 100) : 0;
   let html = `
-    <strong>Global</strong>
-    <div class="progress">
-      <span style="width:${globalPercent}%"></span>
+    <div class="gen-row">
+      <div class="gen-header"><span>🌐 Global</span><span>${owned} / ${pokedex.length} (${globalPct}%)</span></div>
+      <div class="progress"><span style="width:${globalPct}%"></span></div>
     </div>
-    ${owned} / ${pokedex.length}
-    <hr style="border:0;border-top:1px solid #333;margin:8px 0">
+    <div style="border-top:1px solid rgba(255,255,255,0.08);margin:8px 0 10px"></div>
   `;
-
   for (let g = 1; g <= 9; g++) {
-    const percent = Math.round((genOwned[g] / genTotal[g]) * 100);
+    const pct = genTotal[g] ? Math.round((genOwned[g] / genTotal[g]) * 100) : 0;
     html += `
-      <strong>G${g}</strong> : ${genOwned[g]} / ${genTotal[g]}
-      <div class="progress">
-        <span style="width:${percent}%"></span>
-      </div>
-    `;
+      <div class="gen-row">
+        <div class="gen-header"><span>G${g} ${GEN_NAMES[g]}</span><span>${genOwned[g]}/${genTotal[g]}</span></div>
+        <div class="progress"><span style="width:${pct}%"></span></div>
+      </div>`;
   }
-
   genStats.innerHTML = html;
-  updateRareCounter();
+}
+
+/* ===== FILTERS & SORT ===== */
+function getSortedCards() {
+  const arr = [...cards];
+  if (currentSort === 'name') {
+    arr.sort((a, b) => a.dataset.name.localeCompare(b.dataset.name));
+  } else if (currentSort === 'owned') {
+    arr.sort((a, b) => {
+      const ao = a.dataset.missing === 'false' ? 0 : 1;
+      const bo = b.dataset.missing === 'false' ? 0 : 1;
+      return ao - bo || Number(a.dataset.id) - Number(b.dataset.id);
+    });
+  } else {
+    arr.sort((a, b) => Number(a.dataset.id) - Number(b.dataset.id));
+  }
+  return arr;
 }
 
 function applyFilters() {
-  const s = search.value.toLowerCase();
-  const gen = genFilter.value;
+  const s   = search.value.toLowerCase().trim();
+  const gen = currentGen;
+  const isListMode = listView.checked;
 
-  grid.style.display = listView.checked ? "none" : "grid";
-  list.style.display = listView.checked ? "flex" : "none";
-  list.innerHTML = "";
+  grid.style.display    = isListMode ? 'none' : 'grid';
+  listEl.style.display  = isListMode ? 'flex' : 'none';
+  listEl.innerHTML      = '';
 
-  cards.forEach(c => {
-    const ok =
-      (c.dataset.name.toLowerCase().includes(s) || c.dataset.id.startsWith(s)) &&
-      (!onlyMissing.checked || c.dataset.missing === "true") &&
-      (!onlyFav.checked || c.dataset.fav === "true") &&
-      (!onlyRare.checked || c.dataset.rare === "true") &&
-      (gen === "all" || c.dataset.gen === gen);
-
-    c.style.display = ok && !listView.checked ? "" : "none";
-
-    if (ok && listView.checked) {
-      const li = document.createElement("div");
-      li.className = "list-item" + (c.dataset.missing === "true" ? " missing" : "");
-      li.textContent = `#${String(c.dataset.id).padStart(4,"0")} ${c.dataset.name}`;
-      list.appendChild(li);
-    }
-  });
+  if (isListMode) {
+    // rebuild sort order in DOM for list
+    const sorted = getSortedCards();
+    let visible = 0;
+    sorted.forEach(c => {
+      const ok = matchesFilter(c, s, gen);
+      if (!ok) return;
+      visible++;
+      const li = document.createElement('div');
+      li.className = 'list-item' + (c.dataset.missing === 'true' ? ' missing' : '');
+      const idStr = String(c.dataset.id).padStart(4, '0');
+      li.innerHTML = `
+        <span class="list-icon">${c.dataset.fav === 'true' ? '⭐' : ''}</span>
+        <span class="list-icon">${c.dataset.rare === 'true' ? '💎' : ''}</span>
+        <span>#${idStr} ${c.dataset.nameRaw}</span>`;
+      if (c.dataset.missing === 'false') {
+        li.onclick = () => {
+          currentIndex = cards.indexOf(c);
+          openViewer();
+        };
+      }
+      listEl.appendChild(li);
+    });
+    emptyState.style.display = visible === 0 ? 'block' : 'none';
+  } else {
+    // reorder grid children by sort
+    const sorted = getSortedCards();
+    sorted.forEach(c => grid.appendChild(c)); // reorder DOM nodes
+    let visible = 0;
+    sorted.forEach(c => {
+      const ok = matchesFilter(c, s, gen);
+      c.style.display = ok ? '' : 'none';
+      if (ok) visible++;
+    });
+    emptyState.style.display = visible === 0 ? 'block' : 'none';
+  }
 }
 
-[search, onlyMissing, onlyFav, onlyRare, listView, genFilter]
-  .forEach(el => el.addEventListener("change", applyFilters));
+function matchesFilter(c, s, gen) {
+  const nameMatch = c.dataset.name.includes(s) || c.dataset.id.startsWith(s);
+  const genMatch  = gen === 'all' || c.dataset.gen === gen;
+  const missingOk = !onlyMissing.checked || c.dataset.missing === 'true';
+  const favOk     = !onlyFav.checked     || c.dataset.fav === 'true';
+  const rareOk    = !onlyRare.checked    || c.dataset.rare === 'true';
+  return nameMatch && genMatch && missingOk && favOk && rareOk;
+}
 
+/* ===== SORT BUTTONS ===== */
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentSort = btn.dataset.sort;
+    applyFilters();
+  };
+});
+
+/* ===== EVENTS ===== */
+search.addEventListener('input', applyFilters);
+[onlyMissing, onlyFav, onlyRare, listView]
+  .forEach(el => el.addEventListener('change', applyFilters));
+
+/* ===== EXPORT ===== */
+document.getElementById('exportBtn').onclick = () => {
+  const data = {
+    exported: new Date().toISOString(),
+    favorites: [...favorites],
+    rares: [...rares],
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `pokedex_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ Export réussi !');
+};
+
+/* ===== IMPORT ===== */
+document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+
+document.getElementById('importFile').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.favorites) {
+        favorites.clear();
+        data.favorites.map(Number).forEach(id => favorites.add(id));
+        saveSet(STORAGE_KEY_FAV, favorites);
+      }
+      if (data.rares) {
+        rares.clear();
+        data.rares.map(Number).forEach(id => rares.add(id));
+        saveSet(STORAGE_KEY_RARE, rares);
+      }
+      cards.forEach(c => refreshCardMarkers(Number(c.dataset.id)));
+      updateCounters();
+      applyFilters();
+      showToast(`✅ Import réussi — ${favorites.size} favoris, ${rares.size} rares`);
+    } catch {
+      showToast('❌ Fichier JSON invalide');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+};
+
+/* ===== RESET ===== */
+document.getElementById('resetFavBtn').onclick = () => {
+  if (!confirm('Vider tous les favoris ?')) return;
+  favorites.clear();
+  saveSet(STORAGE_KEY_FAV, favorites);
+  cards.forEach(c => refreshCardMarkers(Number(c.dataset.id)));
+  updateCounters();
+  applyFilters();
+  showToast('⭐ Favoris vidés');
+};
+
+document.getElementById('resetRareBtn').onclick = () => {
+  if (!confirm('Vider toutes les rares ?')) return;
+  rares.clear();
+  saveSet(STORAGE_KEY_RARE, rares);
+  cards.forEach(c => refreshCardMarkers(Number(c.dataset.id)));
+  updateCounters();
+  applyFilters();
+  showToast('💎 Rares vidées');
+};
+
+/* ===== TOAST ===== */
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ===== LED EASTER EGG ===== */
+document.getElementById('ledBig').onclick = () => {
+  const led = document.getElementById('ledBig');
+  let count = 0;
+  const iv = setInterval(() => {
+    led.style.boxShadow = count % 2 === 0
+      ? '0 0 30px rgba(0,188,212,1), inset 0 -2px 4px rgba(0,0,0,0.3)'
+      : '0 0 8px rgba(0,188,212,0.4), inset 0 -2px 4px rgba(0,0,0,0.3)';
+    count++;
+    if (count >= 8) {
+      clearInterval(iv);
+      led.style.boxShadow = '';
+    }
+  }, 120);
+};
+
+/* ===== INIT ===== */
 updateCounters();
 </script>
 
