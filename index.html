@@ -586,7 +586,7 @@ h1 {
     <div class="header-stats">
       <div class="stat-pill" id="counter">— / —</div>
       <div class="stat-pill rare" id="rareCounter">0 rares</div>
-      <div class="stat-pill" id="favCounter">0 favoris ⭐</div>
+      <div class="stat-pill" id="favCounter">0 ETB 📦</div>
     </div>
   </header>
 
@@ -626,7 +626,7 @@ h1 {
 
       <div class="toggle-group">
         <label class="toggle"><input type="checkbox" id="onlyMissing"><div class="toggle-dot"></div> Sans carte</label>
-        <label class="toggle"><input type="checkbox" id="onlyFav"><div class="toggle-dot"></div> Favoris ⭐</label>
+        <label class="toggle"><input type="checkbox" id="onlyFav"><div class="toggle-dot"></div> ETB 📦</label>
         <label class="toggle"><input type="checkbox" id="onlyRare"><div class="toggle-dot"></div> Rares 💎</label>
         <label class="toggle"><input type="checkbox" id="listView"><div class="toggle-dot"></div> Vue liste</label>
       </div>
@@ -638,7 +638,7 @@ h1 {
           <button class="action-btn import-btn" id="importBtn">⬆ Import</button>
         </div>
         <div class="action-row" style="margin-top:5px">
-          <button class="action-btn reset-btn" id="resetFavBtn">Vider favoris</button>
+          <button class="action-btn reset-btn" id="resetFavBtn">Vider ETB</button>
           <button class="action-btn reset-btn" id="resetRareBtn">Vider rares</button>
         </div>
         <input type="file" id="importFile" accept=".json" style="display:none">
@@ -666,7 +666,7 @@ h1 {
       <div id="viewerInfo"></div>
       <div id="viewerGen"></div>
       <div id="viewerBadges">
-        <button class="viewer-badge fav-badge" id="viewerFavBtn">⭐ Favori</button>
+        <button class="viewer-badge fav-badge" id="viewerFavBtn">📦 ETB</button>
         <button class="viewer-badge rare-badge" id="viewerRareBtn">💎 Rare</button>
       </div>
     </div>
@@ -682,13 +682,13 @@ h1 {
 <script>
 /* ===================================================
    POKÉDEX — version améliorée
-   - localStorage : favoris & rares persistants
-   - Favoris = tes vraies préférences (liste vide par défaut)
+   - localStorage : ETB & rares persistants
+   - ETB = cartes obtenues via Elite Trainer Box (liste vide par défaut)
    - Rares : liste initiale conservée comme suggestion
    - Recherche temps réel
    - Tri : numéro / nom / possédées en premier
    - Export / Import JSON
-   - Badges favoris & rares dans le viewer
+   - Badges ETB & rares dans le viewer
    - Vue liste cliquable
    - Génération affichée dans le viewer
    - Toasts de feedback
@@ -700,7 +700,7 @@ const STORAGE_KEY_RARE = 'pokedex_rares';
 
 /* IDs par défaut pour les RARES (cartes coréennes / liste initiale)
    Si localStorage est vide, on démarre avec cette liste.
-   Les FAVORIS démarrent vides — tu les choisis toi-même. */
+   Les ETB démarrent vides — tu les choisis toi-même. */
 const INITIAL_RARES = [791,792,812,114,17,16,898,151,763,987,858,799,375,670,796,287,866,201,335,1024,377,681,917,758,131,196,136,18,892,865,718,696,227,665,387,390,393,7,4,728,725,722,424,914,992,1001,1002,1003,1010,1021,1,6,9,10,25,24,34,35,40,52,68,93,94,115,121,130,133,143,145,149,150,157,162,166,169,192,199,205,212,213,220,229,230,242,249,250,257,262,269,272,275,292,308,309,310,316,323,334,352,361,369,374,373,376,380,389,395,407,429,445,448,460,469,479,490,494,496,497,530,531,544,549,547,550,561,565,566,568,574,575,576,579,593,595,599,601,618,619,620,626,628,635,636,641,642,643,644,646,647,648,649,658,666,671,693,706,701,715,719,724,727,741,743,750,760,778,787,809,826,849,861,862,863,875,880,877,899,900,905,906,911,919,923,925,931,935,936,939,949,966,972,970,975,976,979,982,983,995,998,1007,1008,1014,1015,1011,1009,1016,1019,184,359,918,1005,51,777,3];
 
 /* ===== LOAD / SAVE ===== */
@@ -800,7 +800,7 @@ pokedex.forEach(p => {
 
   const star = document.createElement('div');
   star.className   = 'star';
-  star.textContent = etb.has(p.id) ? '⭐' : '☆';
+  star.textContent = etb.has(p.id) ? '📦' : '□';
   if (etb.has(p.id)) star.classList.add('active');
   star.onclick = e => { e.stopPropagation(); toggleFav(p.id); };
 
@@ -825,7 +825,7 @@ pokedex.forEach(p => {
 /* ===== TOGGLE FAV ===== */
 function toggleFav(id) {
   if (etb.has(id)) {
-    favorites.delete(id);
+    etb.delete(id);
   } else {
     etb.add(id);
   }
@@ -858,7 +858,7 @@ function refreshCardMarkers(id) {
   card.dataset.rare = isRare ? 'true' : 'false';
   const star    = card.querySelector('.star');
   const diamond = card.querySelector('.diamond');
-  star.textContent = isFav ? '⭐' : '☆';
+  star.textContent = isFav ? '📦' : '□';
   star.classList.toggle('active', isFav);
   diamond.textContent = isRare ? '💎' : '◇';
   diamond.classList.toggle('active', isRare);
@@ -925,7 +925,7 @@ document.addEventListener('keydown', e => {
 function updateCounters() {
   counter.textContent     = `${owned} / ${pokedex.length} cartes`;
   rareCounter.textContent = `${rares.size} rares 💎`;
-  favCounter.textContent  = `${etb.size} favoris ⭐`;
+  favCounter.textContent  = `${etb.size} ETB 📦`;
 
   const globalPct = pokedex.length ? Math.round((owned / pokedex.length) * 100) : 0;
   let html = `
@@ -984,7 +984,7 @@ function applyFilters() {
       li.className = 'list-item' + (c.dataset.missing === 'true' ? ' missing' : '');
       const idStr = String(c.dataset.id).padStart(4, '0');
       li.innerHTML = `
-        <span class="list-icon">${c.dataset.fav === 'true' ? '⭐' : ''}</span>
+        <span class="list-icon">${c.dataset.fav === 'true' ? '📦' : ''}</span>
         <span class="list-icon">${c.dataset.rare === 'true' ? '💎' : ''}</span>
         <span>#${idStr} ${c.dataset.nameRaw}</span>`;
       if (c.dataset.missing === 'false') {
@@ -1074,7 +1074,7 @@ document.getElementById('importFile').onchange = e => {
       cards.forEach(c => refreshCardMarkers(Number(c.dataset.id)));
       updateCounters();
       applyFilters();
-      showToast(`✅ Import réussi — ${etb.size} favoris, ${rares.size} rares`);
+      showToast(`✅ Import réussi — ${etb.size} ETB, ${rares.size} rares`);
     } catch {
       showToast('❌ Fichier JSON invalide');
     }
@@ -1085,13 +1085,13 @@ document.getElementById('importFile').onchange = e => {
 
 /* ===== RESET ===== */
 document.getElementById('resetFavBtn').onclick = () => {
-  if (!confirm('Vider tous les favoris ?')) return;
+  if (!confirm('Vider tous les ETB ?')) return;
   etb.clear();
   saveSet(STORAGE_KEY_FAV, etb);
   cards.forEach(c => refreshCardMarkers(Number(c.dataset.id)));
   updateCounters();
   applyFilters();
-  showToast('⭐ Favoris vidés');
+  showToast('📦 ETB vidés');
 };
 
 document.getElementById('resetRareBtn').onclick = () => {
