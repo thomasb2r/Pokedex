@@ -695,7 +695,7 @@ h1 {
    - LED bleue interactive
 =================================================== */
 
-const STORAGE_KEY_FAV  = 'pokedex_favorites';
+const STORAGE_KEY_FAV  = 'pokedex_etb';
 const STORAGE_KEY_RARE = 'pokedex_rares';
 
 /* IDs par défaut pour les RARES (cartes coréennes / liste initiale)
@@ -716,7 +716,7 @@ function saveSet(key, set) {
   try { localStorage.setItem(key, JSON.stringify([...set])); } catch {}
 }
 
-const favorites = loadSet(STORAGE_KEY_FAV, []);
+const etb = loadSet(STORAGE_KEY_FAV, []);
 const rares     = loadSet(STORAGE_KEY_RARE, INITIAL_RARES);
 
 /* ===== DOM REFS ===== */
@@ -777,7 +777,7 @@ pokedex.forEach(p => {
   card.dataset.id      = p.id;
   card.dataset.gen     = gen;
   card.dataset.missing = 'true';
-  card.dataset.fav     = favorites.has(p.id) ? 'true' : 'false';
+  card.dataset.fav     = etb.has(p.id) ? 'true' : 'false';
   card.dataset.rare    = rares.has(p.id)     ? 'true' : 'false';
 
   const img = document.createElement('img');
@@ -800,8 +800,8 @@ pokedex.forEach(p => {
 
   const star = document.createElement('div');
   star.className   = 'star';
-  star.textContent = favorites.has(p.id) ? '⭐' : '☆';
-  if (favorites.has(p.id)) star.classList.add('active');
+  star.textContent = etb.has(p.id) ? '⭐' : '☆';
+  if (etb.has(p.id)) star.classList.add('active');
   star.onclick = e => { e.stopPropagation(); toggleFav(p.id); };
 
   const diamond = document.createElement('div');
@@ -824,12 +824,12 @@ pokedex.forEach(p => {
 
 /* ===== TOGGLE FAV ===== */
 function toggleFav(id) {
-  if (favorites.has(id)) {
+  if (etb.has(id)) {
     favorites.delete(id);
   } else {
-    favorites.add(id);
+    etb.add(id);
   }
-  saveSet(STORAGE_KEY_FAV, favorites);
+  saveSet(STORAGE_KEY_FAV, etb);
   refreshCardMarkers(id);
   updateCounters();
   applyFilters();
@@ -852,7 +852,7 @@ function toggleRare(id) {
 function refreshCardMarkers(id) {
   const card = cards.find(c => Number(c.dataset.id) === id);
   if (!card) return;
-  const isFav  = favorites.has(id);
+  const isFav  = etb.has(id);
   const isRare = rares.has(id);
   card.dataset.fav  = isFav  ? 'true' : 'false';
   card.dataset.rare = isRare ? 'true' : 'false';
@@ -883,7 +883,7 @@ function updateViewer() {
 
 function updateViewerBadges() {
   const id = Number(cards[currentIndex].dataset.id);
-  viewerFavBtn.classList.toggle('active',  favorites.has(id));
+  viewerFavBtn.classList.toggle('active',  etb.has(id));
   viewerRareBtn.classList.toggle('active', rares.has(id));
 }
 
@@ -925,7 +925,7 @@ document.addEventListener('keydown', e => {
 function updateCounters() {
   counter.textContent     = `${owned} / ${pokedex.length} cartes`;
   rareCounter.textContent = `${rares.size} rares 💎`;
-  favCounter.textContent  = `${favorites.size} favoris ⭐`;
+  favCounter.textContent  = `${etb.size} favoris ⭐`;
 
   const globalPct = pokedex.length ? Math.round((owned / pokedex.length) * 100) : 0;
   let html = `
@@ -1038,7 +1038,7 @@ search.addEventListener('input', applyFilters);
 document.getElementById('exportBtn').onclick = () => {
   const data = {
     exported: new Date().toISOString(),
-    favorites: [...favorites],
+    etb: [...etb],
     rares: [...rares],
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1061,10 +1061,10 @@ document.getElementById('importFile').onchange = e => {
   reader.onload = ev => {
     try {
       const data = JSON.parse(ev.target.result);
-      if (data.favorites) {
-        favorites.clear();
-        data.favorites.map(Number).forEach(id => favorites.add(id));
-        saveSet(STORAGE_KEY_FAV, favorites);
+      if (data.etb) {
+        etb.clear();
+        data.etb.map(Number).forEach(id => etb.add(id));
+        saveSet(STORAGE_KEY_FAV, etb);
       }
       if (data.rares) {
         rares.clear();
@@ -1074,7 +1074,7 @@ document.getElementById('importFile').onchange = e => {
       cards.forEach(c => refreshCardMarkers(Number(c.dataset.id)));
       updateCounters();
       applyFilters();
-      showToast(`✅ Import réussi — ${favorites.size} favoris, ${rares.size} rares`);
+      showToast(`✅ Import réussi — ${etb.size} favoris, ${rares.size} rares`);
     } catch {
       showToast('❌ Fichier JSON invalide');
     }
@@ -1086,8 +1086,8 @@ document.getElementById('importFile').onchange = e => {
 /* ===== RESET ===== */
 document.getElementById('resetFavBtn').onclick = () => {
   if (!confirm('Vider tous les favoris ?')) return;
-  favorites.clear();
-  saveSet(STORAGE_KEY_FAV, favorites);
+  etb.clear();
+  saveSet(STORAGE_KEY_FAV, etb);
   cards.forEach(c => refreshCardMarkers(Number(c.dataset.id)));
   updateCounters();
   applyFilters();
